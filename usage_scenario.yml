@@ -1,0 +1,48 @@
+---
+name: NOHI energy bench (CIC-IDS2017 sample, XGBoost with and without the ontology rule layer)
+author: Akram Bourichi
+description: Energy of training and of inference, vectorised and flow by flow, for the classifier alone and for the full NOHI path (classifier, rules, fusion, decision trace). Energy per flow is the energy of a phase divided by its number of flows.
+
+services:
+  nohibench:
+    build:
+      context: .
+    image: nohi_energy_bench
+
+flow:
+  - name: Idle reference (30 s)
+    container: nohibench
+    commands:
+      - type: console
+        command: sleep 30
+        note: container idle
+  - name: Train classifier and fit rules
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py train
+        note: training on the sample
+  - name: Batch inference - classifier only (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-ml --n 3000000
+        note: vectorised classifier
+  - name: Batch inference - full NOHI (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-nohi --n 3000000
+        note: vectorised classifier, rules and fusion
+  - name: Single-flow inference - classifier only (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-ml --n 30000
+        note: one flow at a time and one thread
+  - name: Single-flow inference - full NOHI with decision trace (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-nohi --n 30000
+        note: one flow at a time and one thread with explanation
