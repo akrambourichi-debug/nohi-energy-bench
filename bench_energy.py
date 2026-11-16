@@ -3,11 +3,14 @@
 
   prepare      download the public CIC-IDS2017 flow export and keep a stratified random sample (run at image build time)
   train        train XGBoost and fit/calibrate the rule layer on the sample; store the state
+  load         start-up only: import the libraries and load the stored state, no flow processed
   batch-ml     classifier only, vectorised, N flows          batch-nohi   classifier + rules + fusion, vectorised
   single-ml    classifier only, one flow at a time           single-nohi  full NOHI path with the decision trace
 
-Energy per flow = energy of the flow reported by the bench / N (report it gross and net of the idle power)."""
-import argparse, glob, os, pickle, sys, time
+Every inference phase is a new process, so its energy includes the start-up measured by `load`.
+Energy per flow = (energy of the phase - energy of one start-up) / N, reported gross and net of the idle power."""
+import time; T0 = time.perf_counter()
+import argparse, glob, os, pickle, sys
 from pathlib import Path
 from types import SimpleNamespace
 import numpy as np, pandas as pd
@@ -64,6 +67,10 @@ def load():
     S = pickle.load(open(D / "state.pkl", "rb")); return SimpleNamespace(**S)
 
 
+def startup():
+    S = load(); S.onto.prepare_scalar(); print(f"load: libraries imported and state loaded in {time.perf_counter() - T0:.2f} s, 0 flows processed")
+
+
 def batch(mode, n, chunk=100000):
     S = load(); done, alerts = 0, 0; t0 = time.perf_counter()
     while done < n:
@@ -72,7 +79,7 @@ def batch(mode, n, chunk=100000):
             code, conf, rk, _ = S.onto.infer(X); fin = N.fuse(P, code, conf, S.tau, DELTA, S.cc, "literal")[0]
         else: fin = P.argmax(1)
         alerts += int((fin != 0).sum()); done += len(X)
-    dt = time.perf_counter() - t0; print(f"batch-{mode}: {done} flows in {dt:.2f} s ({done / dt:,.0f} flows/s), alerts={alerts}")
+    dt = time.perf_counter() - t0; print(f"batch-{mode}: {done} flows in {dt:.2f} s ({done / dt:,.0f} flows/s), alerts={alerts}, start-up {t0 - T0:.2f} s")
 
 
 def single(mode, n):
@@ -90,13 +97,14 @@ def single(mode, n):
             N.explain_one(st, fin, cf, p, oc, of, rk, x, S.classes, S.onto, S.tau, DELTA)
         else: fin = int(np.argmax(p))
         alerts += int(fin != 0)
-    dt = time.perf_counter() - t0; print(f"single-{mode}: {n} flows in {dt:.2f} s ({1e3 * dt / n:.3f} ms per flow), alerts={alerts}")
+    dt = time.perf_counter() - t0; print(f"single-{mode}: {n} flows in {dt:.2f} s ({1e3 * dt / n:.3f} ms per flow), alerts={alerts}, start-up {t0 - T0:.2f} s")
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser(); ap.add_argument("cmd", choices=["prepare", "train", "batch-ml", "batch-nohi", "single-ml", "single-nohi"])
+    ap = argparse.ArgumentParser(); ap.add_argument("cmd", choices=["prepare", "train", "load", "batch-ml", "batch-nohi", "single-ml", "single-nohi"])
     ap.add_argument("--n", type=int, default=None); ap.add_argument("--sample", default=None); a = ap.parse_args(); D.mkdir(parents=True, exist_ok=True)
     if a.cmd == "prepare": prepare(a.n or 300000, a.sample)
     elif a.cmd == "train": train(a.sample or D / "sample.parquet")
+    elif a.cmd == "load": startup()
     elif a.cmd.startswith("batch"): batch(a.cmd.split("-")[1], a.n or 3000000)
     else: single(a.cmd.split("-")[1], a.n or 30000)

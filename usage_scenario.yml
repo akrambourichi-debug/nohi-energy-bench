@@ -1,7 +1,7 @@
 ---
 name: NOHI energy bench (CIC-IDS2017 sample, XGBoost with and without the ontology rule layer)
 author: Akram Bourichi
-description: Energy of training and of inference, vectorised and flow by flow, for the classifier alone and for the full NOHI path (classifier, rules, fusion, decision trace). Energy per flow is the energy of a phase divided by its number of flows.
+description: Energy of training and of inference, vectorised and flow by flow, for the classifier alone and for the full NOHI path (classifier, rules, fusion, decision trace). Each inference variant is measured twice in a counterbalanced order (classifier, NOHI, NOHI, classifier) and the start-up of a process is measured on its own. Energy per flow is the energy of a phase minus one start-up, divided by its number of flows.
 
 services:
   nohibench:
@@ -22,27 +22,69 @@ flow:
       - type: console
         command: python3 bench_energy.py train
         note: training on the sample
-  - name: Batch inference - classifier only (3000000 flows)
+  - name: Start-up only x5 (libraries and model load)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py load
+        note: start-up 1 of 5
+      - type: console
+        command: python3 bench_energy.py load
+        note: start-up 2 of 5
+      - type: console
+        command: python3 bench_energy.py load
+        note: start-up 3 of 5
+      - type: console
+        command: python3 bench_energy.py load
+        note: start-up 4 of 5
+      - type: console
+        command: python3 bench_energy.py load
+        note: start-up 5 of 5
+  - name: Batch - classifier only - pass 1 (3000000 flows)
     container: nohibench
     commands:
       - type: console
         command: python3 bench_energy.py batch-ml --n 3000000
         note: vectorised classifier
-  - name: Batch inference - full NOHI (3000000 flows)
+  - name: Batch - full NOHI - pass 1 (3000000 flows)
     container: nohibench
     commands:
       - type: console
         command: python3 bench_energy.py batch-nohi --n 3000000
         note: vectorised classifier, rules and fusion
-  - name: Single-flow inference - classifier only (30000 flows)
+  - name: Batch - full NOHI - pass 2 (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-nohi --n 3000000
+        note: vectorised classifier, rules and fusion
+  - name: Batch - classifier only - pass 2 (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-ml --n 3000000
+        note: vectorised classifier
+  - name: Single flow - classifier only - pass 1 (30000 flows)
     container: nohibench
     commands:
       - type: console
         command: python3 bench_energy.py single-ml --n 30000
         note: one flow at a time and one thread
-  - name: Single-flow inference - full NOHI with decision trace (30000 flows)
+  - name: Single flow - full NOHI with trace - pass 1 (30000 flows)
     container: nohibench
     commands:
       - type: console
         command: python3 bench_energy.py single-nohi --n 30000
         note: one flow at a time and one thread with explanation
+  - name: Single flow - full NOHI with trace - pass 2 (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-nohi --n 30000
+        note: one flow at a time and one thread with explanation
+  - name: Single flow - classifier only - pass 2 (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-ml --n 30000
+        note: one flow at a time and one thread
