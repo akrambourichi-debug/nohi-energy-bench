@@ -13,10 +13,12 @@ jobs:
       - name: Build the bench image
         run: docker build -t nohi_energy_bench .
       - name: Run a reduced scenario
-        run: >
-          docker run --rm nohi_energy_bench sh -c
-          "python3 bench_energy.py train &&
-          python3 bench_energy.py batch-ml --n 200000 &&
-          python3 bench_energy.py batch-nohi --n 200000 &&
-          python3 bench_energy.py single-ml --n 2000 &&
-          python3 bench_energy.py single-nohi --n 2000"
+        run: |
+          docker run -d --name nohibench nohi_energy_bench
+          docker exec nohibench python3 bench_energy.py train
+          docker exec nohibench python3 bench_energy.py load
+          docker exec nohibench python3 bench_energy.py batch-ml --n 200000
+          docker exec nohibench python3 bench_energy.py batch-nohi --n 200000
+          docker exec nohibench python3 bench_energy.py single-ml --n 2000
+          docker exec nohibench python3 bench_energy.py single-nohi --n 2000
+          docker rm -f nohibench
