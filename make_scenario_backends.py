@@ -5,9 +5,10 @@ usage: python3 make_scenario_backends.py [output file]"""
 import sys
 
 BACKENDS = ["XGBoost", "LightGBM", "DecisionTree", "MLP"]
-# flows per pass: the two cheap classifiers get more flows, so that a pass lasts tens of seconds like the others
-FLOWS = {"XGBoost": dict(batch=3_000_000, single=30_000), "LightGBM": dict(batch=3_000_000, single=30_000),
-         "DecisionTree": dict(batch=45_000_000, single=120_000), "MLP": dict(batch=24_000_000, single=120_000)}
+# flows per pass: the two cheap classifiers get more flows, so that a pass lasts tens of seconds like the others;
+# the whole scenario must stay well under the 30 minutes that the free tier of the measurement service allows
+FLOWS = {"XGBoost": dict(batch=2_000_000, single=20_000), "LightGBM": dict(batch=2_000_000, single=20_000),
+         "DecisionTree": dict(batch=30_000_000, single=90_000), "MLP": dict(batch=16_000_000, single=90_000)}
 HEAD = """---
 name: NOHI energy bench, four classifiers (CIC-IDS2017 sample, with and without the ontology rule layer)
 author: Akram Bourichi

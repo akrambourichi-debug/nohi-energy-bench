@@ -69,6 +69,7 @@ CIC-IDS2017 was published by I. Sharafaldin, A. H. Lashkari and A. A. Ghorbani (
 `usage_scenario_backends.yml` repeats the ten phases of the first scenario for XGBoost, LightGBM, a decision tree and an
 MLP, with the settings of the pipeline (`--backend` of `bench_energy.py`). The rule layer is the same for all four; only
 the classifier and the arbitration threshold chosen on validation change. The decision tree and the MLP are much cheaper
-per flow, so they process more flows per pass (45 and 24 million in batches, 120,000 flow by flow) and a pass lasts tens of
-seconds like the others. Energy per flow is computed as before: (energy of the phase - energy of one start-up of that
+per flow, so they process more flows per pass (30 and 16 million in batches, 90,000 flow by flow, against 2 million and
+20,000 for the two boosted models) and a pass lasts tens of seconds like the others. The counts are set so that the whole
+scenario stays well under the 30 minutes that the free tier of the hosted Green Metrics Tool allows per measurement. Energy per flow is computed as before: (energy of the phase - energy of one start-up of that
 classifier) / number of flows. To measure it, submit the repository with the file name `usage_scenario_backends.yml`.
