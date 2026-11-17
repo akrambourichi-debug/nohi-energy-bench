@@ -21,4 +21,13 @@ jobs:
           docker exec nohibench python3 bench_energy.py batch-nohi --n 200000
           docker exec nohibench python3 bench_energy.py single-ml --n 2000
           docker exec nohibench python3 bench_energy.py single-nohi --n 2000
+          python3 make_scenario_backends.py /tmp/scenario_check.yml && diff /tmp/scenario_check.yml usage_scenario_backends.yml
+          for b in LightGBM DecisionTree MLP; do
+            docker exec nohibench python3 bench_energy.py train --backend $b
+            docker exec nohibench python3 bench_energy.py load --backend $b
+            docker exec nohibench python3 bench_energy.py batch-ml --n 200000 --backend $b
+            docker exec nohibench python3 bench_energy.py batch-nohi --n 200000 --backend $b
+            docker exec nohibench python3 bench_energy.py single-ml --n 2000 --backend $b
+            docker exec nohibench python3 bench_energy.py single-nohi --n 2000 --backend $b
+          done
           docker rm -f nohibench
