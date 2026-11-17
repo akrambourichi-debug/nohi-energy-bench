@@ -1,0 +1,306 @@
+---
+name: NOHI energy bench, four classifiers (CIC-IDS2017 sample, with and without the ontology rule layer)
+author: Akram Bourichi
+description: Energy of training and of inference, vectorised and flow by flow, for each classifier alone and for the full NOHI path (classifier, rules, fusion, decision trace). Same phases as usage_scenario.yml, repeated for XGBoost, LightGBM, a decision tree and an MLP; the two cheap classifiers process more flows per pass so that a pass lasts tens of seconds.
+
+services:
+  nohibench:
+    build:
+      context: .
+    image: nohi_energy_bench
+
+flow:
+  - name: Idle reference (30 s)
+    container: nohibench
+    commands:
+      - type: console
+        command: sleep 30
+        note: container idle
+  - name: XGBoost - Train classifier and fit rules
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py train --backend XGBoost
+        note: training on the sample
+  - name: XGBoost - Start-up only x5 (libraries and model load)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py load --backend XGBoost
+        note: start-up 1 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend XGBoost
+        note: start-up 2 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend XGBoost
+        note: start-up 3 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend XGBoost
+        note: start-up 4 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend XGBoost
+        note: start-up 5 of 5
+  - name: XGBoost - Batch - classifier only - pass 1 (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-ml --n 3000000 --backend XGBoost
+        note: vectorised classifier
+  - name: XGBoost - Batch - full NOHI - pass 1 (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-nohi --n 3000000 --backend XGBoost
+        note: vectorised classifier, rules and fusion
+  - name: XGBoost - Batch - full NOHI - pass 2 (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-nohi --n 3000000 --backend XGBoost
+        note: vectorised classifier, rules and fusion
+  - name: XGBoost - Batch - classifier only - pass 2 (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-ml --n 3000000 --backend XGBoost
+        note: vectorised classifier
+  - name: XGBoost - Single flow - classifier only - pass 1 (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-ml --n 30000 --backend XGBoost
+        note: one flow at a time and one thread
+  - name: XGBoost - Single flow - full NOHI with trace - pass 1 (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-nohi --n 30000 --backend XGBoost
+        note: one flow at a time and one thread with explanation
+  - name: XGBoost - Single flow - full NOHI with trace - pass 2 (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-nohi --n 30000 --backend XGBoost
+        note: one flow at a time and one thread with explanation
+  - name: XGBoost - Single flow - classifier only - pass 2 (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-ml --n 30000 --backend XGBoost
+        note: one flow at a time and one thread
+  - name: LightGBM - Train classifier and fit rules
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py train --backend LightGBM
+        note: training on the sample
+  - name: LightGBM - Start-up only x5 (libraries and model load)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py load --backend LightGBM
+        note: start-up 1 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend LightGBM
+        note: start-up 2 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend LightGBM
+        note: start-up 3 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend LightGBM
+        note: start-up 4 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend LightGBM
+        note: start-up 5 of 5
+  - name: LightGBM - Batch - classifier only - pass 1 (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-ml --n 3000000 --backend LightGBM
+        note: vectorised classifier
+  - name: LightGBM - Batch - full NOHI - pass 1 (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-nohi --n 3000000 --backend LightGBM
+        note: vectorised classifier, rules and fusion
+  - name: LightGBM - Batch - full NOHI - pass 2 (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-nohi --n 3000000 --backend LightGBM
+        note: vectorised classifier, rules and fusion
+  - name: LightGBM - Batch - classifier only - pass 2 (3000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-ml --n 3000000 --backend LightGBM
+        note: vectorised classifier
+  - name: LightGBM - Single flow - classifier only - pass 1 (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-ml --n 30000 --backend LightGBM
+        note: one flow at a time and one thread
+  - name: LightGBM - Single flow - full NOHI with trace - pass 1 (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-nohi --n 30000 --backend LightGBM
+        note: one flow at a time and one thread with explanation
+  - name: LightGBM - Single flow - full NOHI with trace - pass 2 (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-nohi --n 30000 --backend LightGBM
+        note: one flow at a time and one thread with explanation
+  - name: LightGBM - Single flow - classifier only - pass 2 (30000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-ml --n 30000 --backend LightGBM
+        note: one flow at a time and one thread
+  - name: DecisionTree - Train classifier and fit rules
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py train --backend DecisionTree
+        note: training on the sample
+  - name: DecisionTree - Start-up only x5 (libraries and model load)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py load --backend DecisionTree
+        note: start-up 1 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend DecisionTree
+        note: start-up 2 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend DecisionTree
+        note: start-up 3 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend DecisionTree
+        note: start-up 4 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend DecisionTree
+        note: start-up 5 of 5
+  - name: DecisionTree - Batch - classifier only - pass 1 (45000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-ml --n 45000000 --backend DecisionTree
+        note: vectorised classifier
+  - name: DecisionTree - Batch - full NOHI - pass 1 (45000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-nohi --n 45000000 --backend DecisionTree
+        note: vectorised classifier, rules and fusion
+  - name: DecisionTree - Batch - full NOHI - pass 2 (45000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-nohi --n 45000000 --backend DecisionTree
+        note: vectorised classifier, rules and fusion
+  - name: DecisionTree - Batch - classifier only - pass 2 (45000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-ml --n 45000000 --backend DecisionTree
+        note: vectorised classifier
+  - name: DecisionTree - Single flow - classifier only - pass 1 (120000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-ml --n 120000 --backend DecisionTree
+        note: one flow at a time and one thread
+  - name: DecisionTree - Single flow - full NOHI with trace - pass 1 (120000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-nohi --n 120000 --backend DecisionTree
+        note: one flow at a time and one thread with explanation
+  - name: DecisionTree - Single flow - full NOHI with trace - pass 2 (120000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-nohi --n 120000 --backend DecisionTree
+        note: one flow at a time and one thread with explanation
+  - name: DecisionTree - Single flow - classifier only - pass 2 (120000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-ml --n 120000 --backend DecisionTree
+        note: one flow at a time and one thread
+  - name: MLP - Train classifier and fit rules
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py train --backend MLP
+        note: training on the sample
+  - name: MLP - Start-up only x5 (libraries and model load)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py load --backend MLP
+        note: start-up 1 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend MLP
+        note: start-up 2 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend MLP
+        note: start-up 3 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend MLP
+        note: start-up 4 of 5
+      - type: console
+        command: python3 bench_energy.py load --backend MLP
+        note: start-up 5 of 5
+  - name: MLP - Batch - classifier only - pass 1 (24000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-ml --n 24000000 --backend MLP
+        note: vectorised classifier
+  - name: MLP - Batch - full NOHI - pass 1 (24000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-nohi --n 24000000 --backend MLP
+        note: vectorised classifier, rules and fusion
+  - name: MLP - Batch - full NOHI - pass 2 (24000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-nohi --n 24000000 --backend MLP
+        note: vectorised classifier, rules and fusion
+  - name: MLP - Batch - classifier only - pass 2 (24000000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py batch-ml --n 24000000 --backend MLP
+        note: vectorised classifier
+  - name: MLP - Single flow - classifier only - pass 1 (120000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-ml --n 120000 --backend MLP
+        note: one flow at a time and one thread
+  - name: MLP - Single flow - full NOHI with trace - pass 1 (120000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-nohi --n 120000 --backend MLP
+        note: one flow at a time and one thread with explanation
+  - name: MLP - Single flow - full NOHI with trace - pass 2 (120000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-nohi --n 120000 --backend MLP
+        note: one flow at a time and one thread with explanation
+  - name: MLP - Single flow - classifier only - pass 2 (120000 flows)
+    container: nohibench
+    commands:
+      - type: console
+        command: python3 bench_energy.py single-ml --n 120000 --backend MLP
+        note: one flow at a time and one thread

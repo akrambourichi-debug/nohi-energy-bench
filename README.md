@@ -36,6 +36,7 @@ Every inference phase is a new process, so its energy includes one start-up. For
 | `nohi_v2.py` | the NOHI pipeline (models, rule layer, fusion, decision trace) |
 | `Dockerfile` | bench image, library versions pinned |
 | `usage_scenario.yml` | the phases measured by the Green Metrics Tool |
+| `usage_scenario_backends.yml` | the same phases for four classifiers (XGBoost, LightGBM, decision tree, MLP), written by `make_scenario_backends.py` |
 | `.github/workflows/smoke-test.yml` | builds the image and runs a reduced scenario |
 
 ## Run with the Green Metrics Tool
@@ -62,3 +63,12 @@ without the identifier-like columns (flow identifier, addresses, source port, ti
 `sample.parquet` produced by `python3 bench_energy.py prepare` next to the `Dockerfile`.
 
 CIC-IDS2017 was published by I. Sharafaldin, A. H. Lashkari and A. A. Ghorbani (ICISSP 2018).
+
+## Second scenario: four classifiers
+
+`usage_scenario_backends.yml` repeats the ten phases of the first scenario for XGBoost, LightGBM, a decision tree and an
+MLP, with the settings of the pipeline (`--backend` of `bench_energy.py`). The rule layer is the same for all four; only
+the classifier and the arbitration threshold chosen on validation change. The decision tree and the MLP are much cheaper
+per flow, so they process more flows per pass (45 and 24 million in batches, 120,000 flow by flow) and a pass lasts tens of
+seconds like the others. Energy per flow is computed as before: (energy of the phase - energy of one start-up of that
+classifier) / number of flows. To measure it, submit the repository with the file name `usage_scenario_backends.yml`.
